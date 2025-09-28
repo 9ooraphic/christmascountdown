@@ -5,26 +5,6 @@ html {
     width: 100%;
 }
 
-body {
-    height: 100vh;
-    height: -webkit-fill-available; /* iOS Safari 지원 */
-    overflow: hidden;
-    position: absolute;
-    width: 100%;
-    overscroll-behavior: none; /* 바운스 효과 방지 */
-}
-
-/* 모바일 전용 스크롤 방지 */
-@media (max-width: 768px) {
-    html, body {
-        position: absolute !important;
-        height: 100% !important;
-        height: 100vh !important;
-        height: -webkit-fill-available !important;
-        overflow: hidden !important;
-
-    }
-}
       
       @font-face {
     font-family: 'DOVES';
