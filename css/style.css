@@ -24,9 +24,6 @@ body {
         height: 100vh !important;
         height: -webkit-fill-available !important;
         overflow: hidden !important;
-        touch-action: none !important;
-        -webkit-touch-callout: none !important;
-        overscroll-behavior: none !important;
 
     }
 }
