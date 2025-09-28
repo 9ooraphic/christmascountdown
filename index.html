@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waiting for Santa...</title>
+    <link href="https://fonts.googleapis.com/css2?family=Two+Turtle+Doves&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    
+</head>
+<body>
+    <div class="container">
+        <!-- 타이틀 -->
+        <div class="title">Waiting for Santa...</div>
+
+        <!-- 도로와 산타 -->
+        <div class="road-container">
+            <!-- 도로 PNG 이미지 -->
+            <img src="road.png" alt="road" class="road-image">
+            
+            <!-- 산타 -->
+            <div class="santa" id="santa">
+                <img src="santa.gif" alt="santa walking" style="width: 32px; height: 32px;">
+            </div>
+        </div>
+
+        <!-- 카운트다운 -->
+        <div class="countdown">
+            <div class="countdown-time" id="countdown-time">
+                095:08:26:01
+            </div>
+            <div class="countdown-labels">
+                DAYS&nbsp;&nbsp;&nbsp;&nbsp;HOURS&nbsp;&nbsp;&nbsp;&nbsp;MINS&nbsp;&nbsp;&nbsp;&nbsp;SECS
+            </div>
+        </div>
+    </div>
+
+    <!-- 캡션 -->
+    <div class="caption">
+        <div class="caption-english">
+            Only <span id="days-count">0</span>days left until Santa breaks through the blizzard to bring you gifts for not crying. Shoutout to Santa.
+        </div>
+        <div class="caption-korean">
+            산타가 울지 않은 당신을 위해 눈보라를 뚫고 선물을 가져오기까지 <span id="days-count-kr">0</span>일 남았습니다. <br> 샤라웃 투 산타.
+        </div>
+    </div>
+
+    <!-- 눈송이 컨테이너 -->
+    <div id="snowflakes-container"></div>
+
+    <!-- 파티클 컨테이너 -->
+    <div id="particles-container"></div>
+
+    <!-- 산타 확대 팝업 -->
+    <div id="santa-popup" class="santa-popup hidden">
+        <img src="santa.gif" alt="santa enlarged" class="santa-popup-img">
+    </div>
+
+    <script>
+        // 숫자를 지정된 자릿수로 패딩하는 함수
+        function padNumber(num, length) {
+            var str = num.toString();
+            while (str.length < length) {
+                str = '0' + str;
+            }
+            return str;
+        }
+
+        // 전역 변수
+        let snowflakes = [];
+        let particles = [];
+        let mousePos = { x: 0, y: 0 };
+
+        // 날짜 설정
+        var christmas = new Date('2025-12-25T00:00:00');
+        var startDate = new Date('2025-01-01T00:00:00');
+
+        // DOM 요소
+        const countdownTime = document.getElementById('countdown-time');
+        const daysCountEn = document.getElementById('days-count');
+        const daysCountKr = document.getElementById('days-count-kr');
+        const santa = document.getElementById('santa');
+        const snowflakesContainer = document.getElementById('snowflakes-container');
+        const particlesContainer = document.getElementById('particles-container');
+
+        // 카운트다운 업데이트
+        function updateCountdown() {
+            const now = new Date();
+            const difference = christmas.getTime() - now.getTime();
+
+            if (difference > 0) {
+                const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+                countdownTime.textContent = 
+                    String(days).padStart(3, '0') + ':' + 
+                    String(hours).padStart(2, '0') + ':' + 
+                    String(minutes).padStart(2, '0') + ':' + 
+                    String(seconds).padStart(2, '0');
+            } else {
+                countdownTime.textContent = '000:00:00:00';
+            }
+        }
+
+        // 날짜 카운터 업데이트
+        function updateDaysCount() {
+            var today = new Date();
+            today.setHours(0, 0, 0, 0);  // 시간을 00:00:00으로 설정
+    
+            var startDate = new Date('2025-09-20T00:00:00');  // 시작일 고정
+            var daysPassed = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+    
+            var remainingDays = Math.max(0, 95 - daysPassed);
+    
+            if (daysCountEn && daysCountKr) {
+                daysCountEn.textContent = padNumber(remainingDays, 3);
+                daysCountKr.textContent = remainingDays.toString();
+            }
+        }
+
+        // 산타 위치 업데이트
+        function updateSantaPosition() {
+            const now = new Date();
+            const difference = christmas.getTime() - now.getTime();
+            const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+            
+            const totalDays = 100;
+            const progress = Math.max(0, Math.min(1, 1 - (days / totalDays)));
+            const santaScale = 0.05 + (progress * 1.95);
+            const santaY = 5 + (progress * 45);
+
+            santa.style.top = `${santaY}%`;
+            santa.style.left = '50%';
+            santa.style.transform = `translateX(-50%) scale(${santaScale})`;
+        }
+
+        // 눈송이 생성
+        function createSnowflakes() {
+            snowflakes = [];
+            for (let i = 0; i < 60; i++) {
+                const snowflake = {
+                    id: i,
+                    x: Math.random() * 100,
+                    y: Math.random() * -20,
+                    size: Math.random() * 4 + 2,
+                    speed: Math.random() * 1 + 0.3,
+                    drift: Math.random() * 1 - 0.5,
+                    opacity: Math.random() * 0.8 + 0.2,
+                    element: document.createElement('div')
+                };
+
+                snowflake.element.className = 'snowflake';
+                snowflake.element.textContent = '❄';
+                snowflake.element.style.fontSize = snowflake.size + 'px';
+                snowflake.element.style.opacity = snowflake.opacity;
+                snowflakesContainer.appendChild(snowflake.element);
+
+                snowflakes.push(snowflake);
+            }
+        }
+
+        // 눈송이 애니메이션
+        function animateSnowflakes() {
+            snowflakes.forEach(flake => {
+                flake.y = flake.y > 110 ? -10 : flake.y + flake.speed * 0.8;
+                flake.x += flake.drift + (mousePos.x - window.innerWidth / 2) * 0.0002;
+
+                // x좌표 경계 처리 추가
+        if (flake.x < -5) {
+            flake.x = 105;  // 왼쪽으로 벗어나면 오른쪽에서 나타남
+        } else if (flake.x > 105) {
+            flake.x = -5;   // 오른쪽으로 벗어나면 왼쪽에서 나타남
+        }
+
+                flake.element.style.left = flake.x + '%';
+                flake.element.style.top = flake.y + '%';
+                flake.element.style.transform = 'rotate(' + (flake.y * 2) + 'deg)';
+            });
+        }
+
+        // 클릭 파티클 생성
+        function createClickParticles(x, y) {
+            for (let i = 0; i < 15; i++) {
+                const particle = {
+                    id: Date.now() + i,
+                    x: x,
+                    y: y,
+                    angle: (Math.PI * 2 * i) / 15,
+                    speed: Math.random() * 1.5 + 1,
+                    life: 1,
+                    element: document.createElement('div')
+                };
+
+                particle.element.className = 'particle';
+                particle.element.textContent = '❄';
+                particle.element.style.left = x + 'px';
+                particle.element.style.top = y + 'px';
+                particlesContainer.appendChild(particle.element);
+
+                particles.push(particle);
+            }
+        }
+
+        // 파티클 애니메이션
+        function animateParticles() {
+            particles = particles.filter(particle => {
+                particle.x += Math.cos(particle.angle) * particle.speed * 3;
+                particle.y += Math.sin(particle.angle) * particle.speed * 3;
+                particle.life -= 0.02;
+                particle.speed *= 0.98;
+
+                if (particle.life > 0) {
+                    particle.element.style.left = `${particle.x}px`;
+                    particle.element.style.top = `${particle.y}px`;
+                    particle.element.style.opacity = particle.life;
+                    particle.element.style.transform = `scale(${particle.life})`;
+                    return true;
+                } else {
+                    particle.element.remove();
+                    return false;
+                }
+            });
+        }
+
+        // 화면 클릭시 팝업 표시, 팝업 클릭시 숨기기
+      function addScreenClickEvent() {
+    const popup = document.getElementById('santa-popup');
+    
+    // 항상 클릭 파티클 생성
+    document.addEventListener('click', function(e) {
+        // 팝업을 클릭한 경우가 아니면 파티클 생성
+        if (!popup.contains(e.target)) {
+            createClickParticles(e.clientX, e.clientY);
+        }
+    });
+    
+    // 팝업이 숨겨진 상태에서만 팝업 표시
+    document.addEventListener('click', function(e) {
+        if (popup.classList.contains('hidden') && !popup.contains(e.target)) {
+            popup.style.display = 'block';
+            popup.style.position = 'fixed';
+            popup.style.top = '1rem';
+            popup.style.right = '1rem';
+            popup.style.zIndex = '9999';
+            popup.classList.remove('hidden');
+        }
+    });
+    
+    // 팝업 자체를 클릭하면 숨기기
+    popup.addEventListener('click', function(e) {
+        e.stopPropagation();
+        popup.style.display = 'none';
+        popup.classList.add('hidden');
+    });
+}
+
+        // 이벤트 리스너
+        document.addEventListener('mousemove', (e) => {
+            mousePos.x = e.clientX;
+            mousePos.y = e.clientY;
+        });
+
+        // 애니메이션 루프
+        function animate() {
+            animateSnowflakes();
+            animateParticles();
+            
+            // requestAnimationFrame 호환성
+            if (window.requestAnimationFrame) {
+                requestAnimationFrame(animate);
+            } else {
+                setTimeout(animate, 16);
+            }
+        }
+
+        // 초기화
+        function init() {
+            updateCountdown();
+            updateDaysCount();
+            updateSantaPosition();
+            createSnowflakes();
+            animate();
+
+            // 팝업 기능 추가
+            addScreenClickEvent();
+
+            // 1초마다 업데이트
+            setInterval(() => {
+                updateCountdown();
+                updateDaysCount();
+                updateSantaPosition();
+            }, 1000);
+
+            // 눈송이 애니메이션
+            setInterval(animateSnowflakes, 100);
+            setInterval(animateParticles, 16);
+        }
+
+        // 페이지 로드 시 초기화
+        if (window.addEventListener) {
+            window.addEventListener('load', init);
+        } else if (window.attachEvent) {
+            window.attachEvent('onload', init);
+        } else {
+            window.onload = init;
+        }
+    </script>
+</body>
+</html>
