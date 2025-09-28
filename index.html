@@ -128,7 +128,7 @@
             
             const totalDays = 100;
             const progress = Math.max(0, Math.min(1, 1 - (days / totalDays)));
-            const santaScale = 0.05 + (progress * 1.95);
+            const santaScale = 0.05 + (progress * 20);
             const santaY = 5 + (progress * 45);
 
             santa.style.top = `${santaY}%`;
@@ -224,37 +224,45 @@
             });
         }
 
-        // 화면 클릭시 팝업 표시, 팝업 클릭시 숨기기
-      function addScreenClickEvent() {
+     function addScreenClickEvent() {
     const popup = document.getElementById('santa-popup');
     
-    // 항상 클릭 파티클 생성
+    // 화면 클릭 - 파티클과 팝업 표시
     document.addEventListener('click', function(e) {
-        // 팝업을 클릭한 경우가 아니면 파티클 생성
+        console.log('화면 클릭됨'); // 디버깅용
+        
+        // 파티클 생성
         if (!popup.contains(e.target)) {
             createClickParticles(e.clientX, e.clientY);
         }
-    });
-    
-    // 팝업이 숨겨진 상태에서만 팝업 표시
-    document.addEventListener('click', function(e) {
-        if (popup.classList.contains('hidden') && !popup.contains(e.target)) {
-            popup.style.display = 'block';
-            popup.style.position = 'fixed';
-            popup.style.top = '1rem';
-            popup.style.right = '1rem';
-            popup.style.zIndex = '9999';
+        
+        // 팝업 표시
+        if (popup.classList.contains('hidden')) {
+            console.log('팝업 표시'); // 디버깅용
             popup.classList.remove('hidden');
+            popup.style.display = 'block';
         }
     });
     
-    // 팝업 자체를 클릭하면 숨기기
-    popup.addEventListener('click', function(e) {
-        e.stopPropagation();
-        popup.style.display = 'none';
+    // 팝업 클릭시 숨기기 - 간단한 방법
+    popup.onclick = function() {
+        console.log('팝업 클릭됨'); // 디버깅용
         popup.classList.add('hidden');
-    });
+        popup.style.display = 'none';
+    };
+    
+    // 팝업 이미지 클릭시도 숨기기
+    const popupImg = popup.querySelector('img');
+    if (popupImg) {
+        popupImg.onclick = function(e) {
+            console.log('팝업 이미지 클릭됨'); // 디버깅용
+            e.stopPropagation();
+            popup.classList.add('hidden');
+            popup.style.display = 'none';
+        };
+    }
 }
+
 
         // 이벤트 리스너
         document.addEventListener('mousemove', (e) => {
